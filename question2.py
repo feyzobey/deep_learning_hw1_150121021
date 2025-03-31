@@ -3,13 +3,11 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 
-# Generate synthetic dataset with noise
 np.random.seed(42)
 x = np.linspace(0, 12, 15)
 true_function = lambda x: 2 * np.sin(x / 2) + 0.5 * x
 y = true_function(x) + np.random.normal(0, 1.5, size=len(x))
 
-# Standardize the data
 scaler_x = StandardScaler()
 scaler_y = StandardScaler()
 x_scaled = scaler_x.fit_transform(x.reshape(-1, 1)).ravel()
@@ -17,11 +15,11 @@ y_scaled = scaler_y.fit_transform(y.reshape(-1, 1)).ravel()
 
 
 def poly_features(x, degree):
-    # Generate polynomial features and normalize them
+
     features = np.vstack([x**i for i in range(degree + 1)]).T
-    # Normalize each polynomial feature
+
     for i in range(features.shape[1]):
-        if i > 0:  # Skip the bias term
+        if i > 0:
             features[:, i] = features[:, i] / (np.max(np.abs(features[:, i])) + 1e-10)
     return features
 
@@ -37,19 +35,16 @@ def train_with_early_stopping(X_train, y_train, X_val, y_val, learning_rate, epo
     patience_counter = 0
 
     for epoch in range(epochs):
-        # Compute predictions and error
+
         y_pred = X_train @ weights
         error = y_pred - y_train
 
-        # Compute gradient and update weights
         grad = (2 / len(X_train)) * X_train.T @ error
         weights -= learning_rate * grad
 
-        # Compute validation error
         val_pred = X_val @ weights
         val_error = np.mean((val_pred - y_val) ** 2)
 
-        # Early stopping check
         if val_error < best_val_error:
             best_val_error = val_error
             best_weights = weights.copy()
@@ -60,14 +55,13 @@ def train_with_early_stopping(X_train, y_train, X_val, y_val, learning_rate, epo
         if patience_counter >= patience:
             break
 
-        # Learning rate decay
         if epoch % 100 == 0:
             learning_rate *= 0.95
 
     return best_weights, best_val_error
 
 
-##### Part A - Linear Regression #####
+###
 degree = 1
 kf = KFold(n_splits=5, shuffle=True, random_state=42)
 cv_errors = []
@@ -90,7 +84,6 @@ for train_idx, val_idx in kf.split(X):
 
 print(f"Linear Regression CV Error: {np.mean(cv_errors):.4f}")
 
-# Plot linear regression results
 plt.figure(figsize=(10, 6))
 plt.scatter(x, y, color="blue", label="Data Points")
 
@@ -133,7 +126,6 @@ for train_idx, val_idx in kf.split(X):
 
 print(f"10th Degree Polynomial CV Error: {np.mean(cv_errors):.4f}")
 
-# Plot 10th degree polynomial results
 plt.figure(figsize=(10, 6))
 plt.scatter(x, y, color="blue", label="Data Points")
 
@@ -154,7 +146,7 @@ plt.savefig("question2_tenth_order.png")
 plt.close()
 
 ##### Part C - 10th Degree Polynomial with Lasso Regularization #####
-lambda_lasso = 0.01  # Reduced lambda for better fit
+lambda_lasso = 0.01
 kf = KFold(n_splits=5, shuffle=True, random_state=42)
 cv_errors = []
 
@@ -173,22 +165,18 @@ for train_idx, val_idx in kf.split(X):
     patience_counter = 0
 
     for epoch in range(2000):
-        # Forward pass
+
         y_pred = X_train @ weights
         error = y_pred - y_train
 
-        # Compute gradient
         grad = (2 / len(X_train)) * X_train.T @ error
 
-        # Coordinate descent for Lasso
         for j in range(len(weights)):
             weights[j] = soft_threshold(weights[j] - learning_rate * grad[j], lambda_lasso * learning_rate)
 
-        # Validation error
         val_pred = X_val @ weights
         val_error = np.mean((val_pred - y_val) ** 2)
 
-        # Early stopping check
         if val_error < best_val_error:
             best_val_error = val_error
             best_epoch_weights = weights.copy()
@@ -199,7 +187,6 @@ for train_idx, val_idx in kf.split(X):
         if patience_counter >= 50:
             break
 
-        # Learning rate decay
         if epoch % 100 == 0:
             learning_rate *= 0.95
 
@@ -214,7 +201,6 @@ print("\nLasso Coefficients:")
 for i, w in enumerate(best_weights):
     print(f"Degree {i}: {w:.4f}")
 
-# Plot results with Lasso
 plt.figure(figsize=(10, 6))
 plt.scatter(x, y, color="blue", label="Data Points")
 
